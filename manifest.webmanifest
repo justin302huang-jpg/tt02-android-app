@@ -1,0 +1,27 @@
+{
+  "id": "./",
+  "name": "TT-02 改裝助手",
+  "short_name": "TT-02 助手",
+  "description": "Tamiya TT-02 改裝管理、預算計算與安裝紀錄",
+  "lang": "zh-Hant",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1117",
+  "theme_color": "#101820",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
