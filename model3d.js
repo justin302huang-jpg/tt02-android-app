@@ -58,20 +58,20 @@ function makeWheel(){
   const face=new THREE.Group();
   const hub=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.06,6),rimMat);hub.rotation.x=Math.PI/2;face.add(hub);
   for(let i=0;i<10;i++){ // 10 輻（5 組雙輻），中央單鎖
-    const sp=new THREE.Mesh(new THREE.BoxGeometry(0.035,0.24,0.03),rimMat);
+    const sp=new THREE.Mesh(new THREE.BoxGeometry(0.045,0.25,0.035),rimMat);
     const a=i/10*Math.PI*2+(i%2?0.12:0);
     sp.position.set(Math.sin(a)*0.15,Math.cos(a)*0.15,0);sp.rotation.z=-a;face.add(sp);
   }
   const lip=new THREE.Mesh(new THREE.TorusGeometry(0.275,0.018,8,40),rimMat);face.add(lip);
   const caliper=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.16,0.05),new THREE.MeshStandardMaterial({color:0xd8b400,roughness:.4}));
   caliper.position.set(0.17,0.12,-0.04);face.add(caliper);
-  g.add(face);g.userData.face=face;
+  face.position.z=0.085;g.add(face);g.userData.face=face;
   return g;
 }
 function buildCar(){
   const car=new THREE.Group();
-  paintMat=new THREE.MeshPhysicalMaterial({color:0x1e63c6,metalness:.55,roughness:.32,clearcoat:1,clearcoatRoughness:.06});
-  rimMat=new THREE.MeshStandardMaterial({color:0x2a2d31,metalness:.85,roughness:.3});
+  paintMat=new THREE.MeshPhysicalMaterial({color:0x1f78d1,metalness:.55,roughness:.32,clearcoat:1,clearcoatRoughness:.06});
+  rimMat=new THREE.MeshStandardMaterial({color:0xb08d57,metalness:.9,roughness:.32});
   const glass=new THREE.MeshPhysicalMaterial({color:0x0c1218,metalness:.1,roughness:.05,clearcoat:1,transparent:true,opacity:.92});
   const black=new THREE.MeshStandardMaterial({color:0x0d0f12,roughness:.6});
   const body=extrude(sideProfile(),1.66,0.14,paintMat);car.add(body);
@@ -84,22 +84,50 @@ function buildCar(){
   // 911 招牌：高於前蓋的前葉子板與寬體後葉子板
   const bulge=(x,y,z,sx,sy,sz)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(1,40,24),paintMat);m.scale.set(sx,sy,sz);m.position.set(x,y,z);return m};
   for(const z of [-1,1]){car.add(bulge(0.95,0.60,z*0.70,0.88,0.22,0.24));car.add(bulge(3.40,0.68,z*0.74,1.0,0.25,0.28));}
-  // 圓形大燈
-  const lightMat=new THREE.MeshStandardMaterial({color:0xe9f2ff,emissive:0x9fc4ff,emissiveIntensity:.6,roughness:.15});
-  for(const z of [-.60,.60]){const h=new THREE.Mesh(new THREE.SphereGeometry(0.16,24,16),lightMat);h.scale.set(0.75,0.95,0.95);h.position.set(0.16,0.64,z*1.17);h.rotation.z=-0.55;car.add(h);}
-  // 貫穿式尾燈
-  const tail=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.05,1.6),new THREE.MeshStandardMaterial({color:0xff2020,emissive:0xff0000,emissiveIntensity:1.2}));tail.position.set(4.665,0.72,0);car.add(tail);
-  // 前下巴、側裙、後擴散器、進氣口
-  const lip=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.05,1.8),black);lip.position.set(-0.04,0.19,0);car.add(lip);
-  for(const z of [-1,1]){const sk=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.07,0.06),black);sk.position.set(2.2,0.22,z*0.97);car.add(sk);}
-  const dif=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.16,1.4),black);dif.position.set(4.56,0.27,0);car.add(dif);
-  for(const z of [-.55,0,.55]){const g=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.12,z?0.42:0.6),black);g.position.set(-0.11,0.33,z);car.add(g);}
+  // ---- 依 992 GT3 照片加入的細節 ----
+  const chrome=new THREE.MeshStandardMaterial({color:0xcfd5da,metalness:1,roughness:.2});
+  const lens=new THREE.MeshPhysicalMaterial({color:0xdfe9f5,metalness:.2,roughness:.05,clearcoat:1,emissive:0x5c7ea8,emissiveIntensity:.25});
+  const drl=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xe8f2ff,emissiveIntensity:1.6});
+  // 圓形 LED 大燈（四點式日行燈）
+  for(const z of [-.69,.69]){const g=new THREE.Group();
+    const ring=new THREE.Mesh(new THREE.CylinderGeometry(0.155,0.155,0.05,32),chrome);ring.rotation.z=Math.PI/2;g.add(ring);
+    const l=new THREE.Mesh(new THREE.CylinderGeometry(0.135,0.135,0.055,32),lens);l.rotation.z=Math.PI/2;l.position.x=-0.005;g.add(l);
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2+Math.PI/4,d=new THREE.Mesh(new THREE.BoxGeometry(0.02,0.035,0.035),drl);d.position.set(-0.03,Math.sin(a)*0.09,Math.cos(a)*0.09);g.add(d)}
+    g.position.set(0.14,0.66,z);g.rotation.z=-0.45;car.add(g)}
+  // 引擎蓋黑色條紋（照片中偏一側的單條紋）
+  {const c=new THREE.CubicBezierCurve(new THREE.Vector2(0.08,0.48),new THREE.Vector2(0.35,0.60),new THREE.Vector2(0.85,0.68),new THREE.Vector2(1.40,0.74));
+   const pts=c.getPoints(40),up=[],dn=[];pts.forEach((p,i)=>{const t=c.getTangent(i/40),n=new THREE.Vector2(-t.y,t.x);up.push(p.clone().addScaledVector(n,0.128));dn.push(p.clone().addScaledVector(n,0.112))});
+   const sh=new THREE.Shape([...up,...dn.reverse()]);const st=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.2,bevelEnabled:false}),new THREE.MeshPhysicalMaterial({color:0x111316,roughness:.35,clearcoat:1}));st.position.z=0.12;car.add(st)}
+  // 貫穿式尾燈＋下方燈條
+  const red=new THREE.MeshStandardMaterial({color:0xff1a1a,emissive:0xff0000,emissiveIntensity:1.4});
+  const tail=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.05,1.62),red);tail.position.set(4.665,0.72,0);car.add(tail);
+  for(const z of [-.62,.62]){const t2=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.03,0.3),red);t2.position.set(4.66,0.47,z);car.add(t2)}
+  // 前保桿：黑色下巴、三個進氣口、擾流唇
+  const lowF=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.15,1.78),black);lowF.position.set(-0.08,0.29,0);car.add(lowF);
+  for(const z of [-.62,0,.62]){const g=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.12,z?0.4:0.62),new THREE.MeshStandardMaterial({color:0x050607,roughness:.9}));g.position.set(-0.135,0.31,z);car.add(g)}
+  const lip=new THREE.Mesh(new THREE.BoxGeometry(0.26,0.04,1.84),black);lip.position.set(-0.06,0.19,0);car.add(lip);
+  // 黑色側裙、後擴散器、中置雙排氣管、引擎蓋格柵
+  for(const z of [-1,1]){const sk=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.08,0.07),black);sk.position.set(2.2,0.22,z*0.97);car.add(sk);}
+  const dif=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.18,1.5),black);dif.position.set(4.56,0.27,0);car.add(dif);
+  for(let i=-3;i<=3;i++){const f=new THREE.Mesh(new THREE.BoxGeometry(0.28,0.14,0.015),black);f.position.set(4.62,0.24,i*0.2);car.add(f)}
+  for(const z of [-.09,.09]){const ex=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,0.14,20,1,true),new THREE.MeshStandardMaterial({color:0xb9c0c6,metalness:1,roughness:.25,side:THREE.DoubleSide}));ex.rotation.z=Math.PI/2;ex.position.set(4.7,0.3,z);car.add(ex)}
+  const deck=new THREE.Mesh(new THREE.BoxGeometry(0.26,0.02,0.95),black);deck.position.set(4.34,1.0,0);deck.rotation.z=-0.12;car.add(deck);
   // 後視鏡
-  for(const z of [-1,1]){const m=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.09,0.16),paintMat);m.position.set(1.85,0.88,z*0.86);car.add(m);}
-  // GT3 鵝頸式尾翼
-  const wing=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.035,1.86),black);wing.position.set(4.42,1.30,0);wing.rotation.z=0.10;car.add(wing);
-  for(const z of [-1,1]){const ep=new THREE.Mesh(new THREE.BoxGeometry(0.46,0.16,0.02),black);ep.position.set(4.42,1.27,z*0.94);car.add(ep);
-    const st=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.44,0.04),black);st.position.set(4.28,1.08,z*0.33);st.rotation.z=-0.35;car.add(st);}
+  for(const z of [-1,1]){const m=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.09,0.17),paintMat);m.position.set(1.85,0.88,z*0.86);car.add(m);const arm=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.04,0.12),black);arm.position.set(1.88,0.85,z*0.76);car.add(arm)}
+  // GT3 鵝頸式尾翼（支架由上方吊掛翼面）
+  const wing=new THREE.Mesh(new THREE.BoxGeometry(0.46,0.035,1.9),black);wing.position.set(4.46,1.30,0);wing.rotation.z=0.12;car.add(wing);
+  const flap=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.02,1.9),black);flap.position.set(4.68,1.36,0);flap.rotation.z=0.45;car.add(flap);
+  for(const z of [-1,1]){const ep=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.24,0.02),black);ep.position.set(4.5,1.30,z*0.96);car.add(ep);
+    const st=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.5,0.04),black);st.position.set(4.3,1.14,z*0.32);st.rotation.z=-0.42;car.add(st);
+    const hook=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.04,0.04),black);hook.position.set(4.44,1.37,z*0.32);car.add(hook);}
+  // 車牌與 GT3 字樣
+  const label=(txt,w,h,bg,fg,font)=>{const c=document.createElement('canvas');c.width=512;c.height=Math.round(512*h/w);const x=c.getContext('2d');if(bg){x.fillStyle=bg;x.fillRect(0,0,c.width,c.height);x.fillStyle='#1d4fb8';x.fillRect(0,0,c.width*0.09,c.height)}x.fillStyle=fg;x.font=font;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,c.width*(bg?0.54:0.5),c.height/2+4);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshStandardMaterial({map:t,transparent:!bg,roughness:.5})};
+  const plateMat=label('TT-02 GT3',0.5,0.11,'#f4f4f0','#111','bold 76px sans-serif');
+  const pf=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.11),plateMat);pf.position.set(-0.142,0.44,0);pf.rotation.y=-Math.PI/2;car.add(pf);
+  const pr=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.11),plateMat);pr.position.set(4.672,0.56,0);pr.rotation.y=Math.PI/2;car.add(pr);
+  const gt3=label('GT3',0.28,0.1,null,'#e8ecef','italic bold 150px sans-serif');
+  for(const z of [-1,1]){const d=new THREE.Mesh(new THREE.PlaneGeometry(0.28,0.1),gt3);d.position.set(1.62,0.4,z*0.973);if(z<0)d.rotation.y=Math.PI;car.add(d)}
+  const gt3r=new THREE.Mesh(new THREE.PlaneGeometry(0.2,0.07),gt3);gt3r.position.set(4.672,0.66,0.45);gt3r.rotation.y=Math.PI/2;car.add(gt3r);
   // 輪胎
   wheels=[];
   for(const [x,z] of [[0.98,-0.83],[0.98,0.83],[3.42,-0.86],[3.42,0.86]]){const w=makeWheel();w.position.set(x,0.38,z);if(z<0)w.rotation.y=Math.PI;car.add(w);wheels.push(w);}
